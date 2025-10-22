@@ -1,7 +1,7 @@
 import streamlit as st
-import os
+import pandas as pd
 import sqlite3 # For database operations
-from config import DB_FILE, DB_SCHEMA
+from config import DB_FILE
 
 # Database Setup Functions
 
@@ -28,7 +28,7 @@ def init_database():
 
 def add_expense_to_db(date, category, amount, description):
     """Add a new expense to the database.
-    Rerurns True if successful, False otherwise.
+    Returns True if successful, False otherwise.
     """
     try:
         conn = sqlite3.connect(DB_FILE)
@@ -46,4 +46,52 @@ def add_expense_to_db(date, category, amount, description):
         return True
     except Exception as e:
         st.error(f"Error adding expese: {e}")
+        return False
+
+def get_all_expenses():
+    """
+    Retrieve all expenses from the database.
+    Returns a pandas Dataframe. 
+    """
+
+    conn =sqlite3.conn(DB_FILE)
+
+    # Read data into Dataframe
+    df = pd.read_sql_query("SELECT * FROM expenses ORDER by date DESC", conn)
+    conn.close()
+
+    return df
+
+def delete_expense_from_db(expense_id):
+    """
+    Delete an expense by its ID. 
+    """
+
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+
+        cursor.execute("DELETE FROM expenses WHERE id = ?", (expense_id,))
+
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        st.error(f"Error deleting expense: {e}")
+        return False
+    
+def clear_all_expenses():
+    """
+    Delete all expenses from the database. 
+    """
+
+    try:
+
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+
+        cursor.execute("DELETE FROM expenses")
+        return True
+    except Exception as e:
+        st.error(f"Error clearing expenses: {e}")
         return False
